@@ -16,10 +16,11 @@ const organizationSchema = z
     domain: z
       .string()
       .nullable()
+      .transform((value) => (value === '' ? null : value))
       .refine(
         (value) => {
           if (value) {
-            const domainRegex = /^[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$/
+            const domainRegex = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
 
             return domainRegex.test(value)
           }
