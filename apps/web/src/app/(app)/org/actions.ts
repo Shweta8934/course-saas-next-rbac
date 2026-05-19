@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { getCurrentOrg } from '@/auth/auth'
 import { createOrganization } from '@/http/create-organization'
 import { updateOrganization } from '@/http/update-organization'
+import { saveUpload } from '@/lib/save-upload'
 
 const organizationSchema = z
   .object({
@@ -62,12 +63,15 @@ export async function createOrganizationAction(data: FormData) {
   }
 
   const { name, domain, shouldAttachUsersByDomain } = result.data
+  const avatarFile = data.get('avatar') as File | null
 
   try {
+    const avatarUrl = await saveUpload(avatarFile)
     await createOrganization({
       name,
       domain,
       shouldAttachUsersByDomain,
+      avatarUrl: avatarUrl ?? undefined,
     })
 
     revalidateTag('organizations')
@@ -91,6 +95,7 @@ export async function createOrganizationAction(data: FormData) {
     success: true,
     message: 'Successfully saved the organization.',
     errors: null,
+    redirectTo: '/',
   }
 }
 
@@ -106,13 +111,16 @@ export async function updateOrganizationAction(data: FormData) {
   }
 
   const { name, domain, shouldAttachUsersByDomain } = result.data
+  const avatarFile = data.get('avatar') as File | null
 
   try {
+    const avatarUrl = await saveUpload(avatarFile)
     await updateOrganization({
       org: currentOrg!,
       name,
       domain,
       shouldAttachUsersByDomain,
+      avatarUrl: avatarUrl ?? undefined,
     })
 
     revalidateTag('organizations')
@@ -136,5 +144,6 @@ export async function updateOrganizationAction(data: FormData) {
     success: true,
     message: 'Successfully saved the organization.',
     errors: null,
+    redirectTo: `/org/${currentOrg}`,
   }
 }

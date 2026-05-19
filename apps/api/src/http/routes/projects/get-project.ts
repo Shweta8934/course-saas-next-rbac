@@ -21,7 +21,7 @@ export async function getProject(app: FastifyInstance) {
           security: [{ bearerAuth: [] }],
           params: z.object({
             orgSlug: z.string(),
-            projectSlug: z.string().uuid(),
+            projectSlug: z.string(),
           }),
           response: {
             200: z.object({
@@ -30,14 +30,27 @@ export async function getProject(app: FastifyInstance) {
                 description: z.string(),
                 name: z.string(),
                 slug: z.string(),
-                avatarUrl: z.string().url().nullable(),
+                avatarUrl: z.string().nullable(),
                 organizationId: z.string().uuid(),
                 ownerId: z.string().uuid(),
                 owner: z.object({
                   id: z.string().uuid(),
                   name: z.string().nullable(),
-                  avatarUrl: z.string().url().nullable(),
+                  avatarUrl: z.string().nullable(),
                 }),
+                members: z.array(
+                  z.object({
+                    id: z.string().uuid(),
+                    role: z.string(),
+                    userId: z.string().uuid(),
+                    user: z.object({
+                      id: z.string().uuid(),
+                      name: z.string().nullable(),
+                      email: z.string().email(),
+                      avatarUrl: z.string().nullable(),
+                    }),
+                  }),
+                ),
               }),
             }),
           },
@@ -74,6 +87,25 @@ export async function getProject(app: FastifyInstance) {
                 avatarUrl: true,
               },
             },
+            memberAssignments: {
+              select: {
+                member: {
+                  select: {
+                    id: true,
+                    role: true,
+                    userId: true,
+                    user: {
+                      select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        avatarUrl: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
           where: {
             slug: projectSlug,
@@ -85,7 +117,12 @@ export async function getProject(app: FastifyInstance) {
           throw new BadRequestError('Project not found.')
         }
 
-        return reply.send({ project })
+        return reply.send({
+          project: {
+            ...project,
+            members: project.memberAssignments.map((assignment) => assignment.member),
+          },
+        })
       },
     )
 }

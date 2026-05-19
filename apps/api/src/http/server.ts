@@ -15,6 +15,7 @@ import { errorHandler } from '@/http/error-handler'
 import { authenticateWithGithub } from '@/http/routes/auth/authenticate-with-github'
 import { authenticateWithPassword } from '@/http/routes/auth/authenticate-with-password'
 import { getProfile } from '@/http/routes/auth/get-profile'
+import { impersonateUser } from '@/http/routes/auth/impersonate-user'
 import { requestPasswordRecover } from '@/http/routes/auth/request-password-recover'
 import { resetPassword } from '@/http/routes/auth/reset-password'
 import { getOrganizationBilling } from '@/http/routes/billing/get-organization-billing'
@@ -36,6 +37,7 @@ import { transferOrganization } from '@/http/routes/orgs/transfer-organization'
 import { updateOrganization } from '@/http/routes/orgs/update-organization'
 import { createProject } from '@/http/routes/projects/create-project'
 import { deleteProject } from '@/http/routes/projects/delete-project'
+import { assignProjectMember } from '@/http/routes/projects/assign-project-member'
 import { getProject } from '@/http/routes/projects/get-project'
 import { getProjects } from '@/http/routes/projects/get-projects'
 import { updateProject } from '@/http/routes/projects/update-project'
@@ -84,6 +86,7 @@ app.register(createAccount)
 app.register(authenticateWithPassword)
 app.register(authenticateWithGithub)
 app.register(getProfile)
+app.register(impersonateUser)
 app.register(requestPasswordRecover)
 app.register(resetPassword)
 
@@ -96,6 +99,7 @@ app.register(shutdownOrganization)
 app.register(transferOrganization)
 
 app.register(createProject)
+app.register(assignProjectMember)
 app.register(deleteProject)
 app.register(getProject)
 app.register(getProjects)

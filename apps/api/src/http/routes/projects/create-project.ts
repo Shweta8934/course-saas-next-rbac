@@ -23,6 +23,7 @@ export async function createProject(app: FastifyInstance) {
           body: z.object({
             name: z.string(),
             description: z.string(),
+            avatarUrl: z.string().optional(),
           }),
           params: z.object({
             slug: z.string(),
@@ -48,7 +49,7 @@ export async function createProject(app: FastifyInstance) {
           )
         }
 
-        const { name, description } = request.body
+        const { name, description, avatarUrl } = request.body
         const projectSlug = createSlug(name)
 
         const projectWithSameSlug = await prisma.project.findUnique({
@@ -66,6 +67,7 @@ export async function createProject(app: FastifyInstance) {
             name,
             slug: projectSlug,
             description,
+            avatarUrl,
             organizationId: organization.id,
             ownerId: userId,
           },

@@ -9,6 +9,28 @@ export function isAuthenticated() {
   return !!cookies().get('token')?.value
 }
 
+export function getImpersonationContext() {
+  const token = cookies().get('token')?.value
+
+  if (!token) return null
+
+  const [, payload] = token.split('.')
+
+  if (!payload) return null
+
+  try {
+    const decoded = JSON.parse(
+      Buffer.from(payload, 'base64url').toString('utf-8'),
+    ) as { impersonatedBy?: string }
+
+    if (!decoded.impersonatedBy) return null
+
+    return { impersonatedByUserId: decoded.impersonatedBy }
+  } catch {
+    return null
+  }
+}
+
 export function getCurrentOrg() {
   return cookies().get('org')?.value ?? null
 }

@@ -4,6 +4,7 @@ import { z } from 'zod'
 
 import { auth } from '@/http/middlewares/auth'
 import { UnauthorizedError } from '@/http/routes/_errors/unauthorized-error'
+import { createAuditLog } from '@/lib/audit-log'
 import { prisma } from '@/lib/prisma'
 import { getUserPermissions } from '@/utils/get-user-permissions'
 
@@ -30,7 +31,8 @@ export async function removeMember(app: FastifyInstance) {
       },
       async (request, reply) => {
         const { slug, memberId } = request.params
-        const userId = await request.getCurrentUserId()
+        const authContext = await request.getAuthContext()
+        const userId = authContext.effectiveUserId
         const { organization, membership } =
           await request.getUserMembership(slug)
 
@@ -47,6 +49,16 @@ export async function removeMember(app: FastifyInstance) {
             id: memberId,
             organizationId: organization.id,
           },
+        })
+
+        await createAuditLog({
+          eventType: 'USER_REMOVED',
+          actorUserId: authContext.actorUserId,
+          effectiveUserId: authContext.effectiveUserId,
+          organizationId: organization.id,
+          entityType: 'member',
+          entityId: memberId,
+          metadata: null,
         })
 
         return reply.status(204).send()

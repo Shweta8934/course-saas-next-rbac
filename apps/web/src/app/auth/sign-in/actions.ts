@@ -5,12 +5,21 @@ import { cookies } from 'next/headers'
 import { z } from 'zod'
 
 import { acceptInvite } from '@/http/accept-invite'
+import { getOrganizations } from '@/http/get-organizations'
 import { signInWithPassword } from '@/http/sign-in-with-password'
 
 const signInSchema = z.object({
   email: z
     .string()
-    .email({ message: 'Please, provide a valid e-mail address.' }),
+    .email({ message: 'Please, provide a valid e-mail address.' })
+    .refine(
+      (email) =>
+        email.toLowerCase().endsWith('@gmail.com') ||
+        email.toLowerCase().endsWith('.in'),
+      {
+        message: 'Only @gmail.com or .in email addresses are allowed.',
+      },
+    ),
   password: z.string().min(1, { message: 'Please, provide your password.' }),
 })
 
@@ -46,6 +55,17 @@ export async function signInWithEmailAndPassword(data: FormData) {
         console.log(e)
       }
     }
+
+    const { organizations } = await getOrganizations()
+    const preferredOrganization =
+      organizations.find((organization) => organization.role === 'ADMIN') ??
+      organizations[0]
+
+    const redirectTo = preferredOrganization
+      ? `/org/${preferredOrganization.slug}`
+      : '/create-organization'
+
+    return { success: true, message: null, errors: null, redirectTo }
   } catch (err) {
     if (err instanceof HTTPError) {
       const { message } = await err.response.json()
@@ -61,6 +81,4 @@ export async function signInWithEmailAndPassword(data: FormData) {
       errors: null,
     }
   }
-
-  return { success: true, message: null, errors: null }
 }

@@ -7,10 +7,22 @@ import { prisma } from '@/lib/prisma'
 export const auth = fastifyPlugin(async (app: FastifyInstance) => {
   app.addHook('preHandler', async (request) => {
     request.getCurrentUserId = async () => {
-      try {
-        const { sub } = await request.jwtVerify<{ sub: string }>()
+      const authContext = await request.getAuthContext()
+      return authContext.effectiveUserId
+    }
 
-        return sub
+    request.getAuthContext = async () => {
+      try {
+        const { sub, impersonatedBy } = await request.jwtVerify<{
+          sub: string
+          impersonatedBy?: string
+        }>()
+
+        return {
+          actorUserId: impersonatedBy ?? sub,
+          effectiveUserId: sub,
+          impersonatedByUserId: impersonatedBy ?? null,
+        }
       } catch {
         throw new UnauthorizedError('Invalid token')
       }

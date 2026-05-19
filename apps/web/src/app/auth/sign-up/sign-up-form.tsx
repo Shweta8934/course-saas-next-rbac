@@ -1,9 +1,10 @@
 'use client'
 
-import { AlertTriangle, Loader2 } from 'lucide-react'
+import { AlertTriangle, Eye, EyeOff, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
 import githubIcon from '@/assets/github-icon.svg'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -17,6 +18,9 @@ import { signInWithGithub } from '../actions'
 import { signUpAction } from './actions'
 
 export function SignUpForm() {
+  const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordConfirmation, setShowPasswordConfirmation] =
+    useState(false)
   const router = useRouter()
 
   const [{ errors, message, success }, handleSubmit, isPending] = useFormState(
@@ -63,7 +67,26 @@ export function SignUpForm() {
 
         <div className="space-y-1">
           <Label htmlFor="password">Password</Label>
-          <Input name="password" type="password" id="password" />
+          <div className="relative">
+            <Input
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              id="password"
+              className="pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((value) => !value)}
+              className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? (
+                <EyeOff className="size-4" />
+              ) : (
+                <Eye className="size-4" />
+              )}
+            </button>
+          </div>
 
           {errors?.password && (
             <p className="text-xs font-medium text-red-500 dark:text-red-400">
@@ -74,11 +97,28 @@ export function SignUpForm() {
 
         <div className="space-y-1">
           <Label htmlFor="password_confirmation">Confirm your password</Label>
-          <Input
-            name="password_confirmation"
-            type="password"
-            id="password_confirmation"
-          />
+          <div className="relative">
+            <Input
+              name="password_confirmation"
+              type={showPasswordConfirmation ? 'text' : 'password'}
+              id="password_confirmation"
+              className="pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPasswordConfirmation((value) => !value)}
+              className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
+              aria-label={
+                showPasswordConfirmation ? 'Hide password' : 'Show password'
+              }
+            >
+              {showPasswordConfirmation ? (
+                <EyeOff className="size-4" />
+              ) : (
+                <Eye className="size-4" />
+              )}
+            </button>
+          </div>
 
           {errors?.password_confirmation && (
             <p className="text-xs font-medium text-red-500 dark:text-red-400">

@@ -4,6 +4,7 @@ interface CreateOrganizationRequest {
   name: string
   domain: string | null
   shouldAttachUsersByDomain: boolean
+  avatarUrl?: string | null
 }
 
 type CreateOrganizationResponse = void
@@ -12,12 +13,14 @@ export async function createOrganization({
   name,
   domain,
   shouldAttachUsersByDomain,
+  avatarUrl,
 }: CreateOrganizationRequest): Promise<CreateOrganizationResponse> {
   await api.post('organizations', {
     json: {
       name,
       domain,
       shouldAttachUsersByDomain,
+      avatarUrl,
     },
   })
 }

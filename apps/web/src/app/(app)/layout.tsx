@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 
 import { isAuthenticated } from '@/auth/auth'
+import { ImpersonationBanner } from '@/components/impersonation-banner'
 
 export default function AppLayout({
   children,
@@ -15,6 +16,7 @@ export default function AppLayout({
 
   return (
     <>
+      <ImpersonationBanner />
       {children}
       {sheet}
     </>

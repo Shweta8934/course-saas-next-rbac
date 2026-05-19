@@ -12,7 +12,15 @@ const signUpSchema = z
     }),
     email: z
       .string()
-      .email({ message: 'Please, provide a valid e-mail address.' }),
+      .email({ message: 'Please, provide a valid e-mail address.' })
+      .refine(
+        (email) =>
+          email.toLowerCase().endsWith('@gmail.com') ||
+          email.toLowerCase().endsWith('.in'),
+        {
+          message: 'Only @gmail.com or .in email addresses are allowed.',
+        },
+      ),
     password: z
       .string()
       .min(6, { message: 'Password should have at least 6 characters.' }),

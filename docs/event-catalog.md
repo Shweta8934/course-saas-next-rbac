@@ -1,0 +1,68 @@
+# Event Catalog Freeze (Audit + Proctoring + Lifecycle)
+
+## Principles
+1. All critical actions emit immutable events.
+2. Event timestamp in UTC with actor metadata.
+3. Correlate by `tenant_id`, `job_id`, `candidate_id`, `attempt_id`.
+
+## Audit Events
+1. `AUTH_LOGIN_SUCCESS`
+2. `AUTH_LOGIN_FAILURE`
+3. `USER_IMPERSONATION_STARTED`
+4. `USER_IMPERSONATION_ENDED`
+5. `COMPANY_CREATED`
+6. `COMPANY_SUSPENDED`
+7. `COMPANY_REACTIVATED`
+8. `TENANT_BRANDING_UPDATED`
+9. `USER_INVITED`
+10. `USER_ROLE_CHANGED`
+11. `JOB_CREATED`
+12. `JOB_UPDATED`
+13. `PIPELINE_UPDATED`
+14. `ASSESSMENT_MAPPED`
+15. `INTERVIEWER_MAPPED`
+16. `CANDIDATE_ADDED_MANUAL`
+17. `CANDIDATE_BULK_IMPORTED`
+18. `ASSESSMENT_INVITE_SENT`
+19. `HR_FINAL_DECISION_MADE`
+
+## Candidate Attempt Events
+1. `ATTEMPT_STARTED`
+2. `ATTEMPT_AUTOSAVED`
+3. `ATTEMPT_RESUMED`
+4. `ATTEMPT_SUBMITTED`
+5. `ATTEMPT_TERMINATED_BY_PROCTOR`
+
+## Proctoring Events
+1. `PROCTOR_TAB_SWITCH`
+2. `PROCTOR_FULLSCREEN_EXIT`
+3. `PROCTOR_CAMERA_STREAM_LOST`
+4. `PROCTOR_MULTIPLE_FACES_DETECTED`
+5. `PROCTOR_MOBILE_FEED_DISCONNECTED`
+6. `PROCTOR_WARNING_ISSUED`
+7. `PROCTOR_WARNING_ACKNOWLEDGED`
+
+## Interview Events
+1. `INTERVIEW_SESSION_CREATED`
+2. `INTERVIEW_SESSION_JOINED`
+3. `INTERVIEW_SCORECARD_SUBMITTED`
+
+## Lifecycle Timeline Events
+1. `LIFECYCLE_APPLIED`
+2. `LIFECYCLE_SHORTLISTED`
+3. `LIFECYCLE_TEST_SENT`
+4. `LIFECYCLE_TEST_COMPLETED`
+5. `LIFECYCLE_INTERVIEWED`
+6. `LIFECYCLE_HIRED`
+7. `LIFECYCLE_REJECTED`
+
+## Minimum Event Payload
+- `event_id`
+- `event_type`
+- `occurred_at_utc`
+- `tenant_id`
+- `actor_user_id`
+- `effective_user_id` (if impersonated)
+- `entity_type`
+- `entity_id`
+- `metadata` (JSON)

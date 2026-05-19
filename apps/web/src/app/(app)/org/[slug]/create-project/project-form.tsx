@@ -1,7 +1,7 @@
 'use client'
 
 import { AlertTriangle, Loader2 } from 'lucide-react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -14,14 +14,19 @@ import { queryClient } from '@/lib/react-query'
 import { createProjectAction } from './actions'
 
 export function ProjectForm() {
+  const router = useRouter()
   const { slug: org } = useParams<{ slug: string }>()
 
   const [{ errors, message, success }, handleSubmit, isPending] = useFormState(
     createProjectAction,
-    () => {
+    (state) => {
       queryClient.invalidateQueries({
         queryKey: [org, 'projects'],
       })
+
+      if (state.redirectTo && typeof state.redirectTo === 'string') {
+        router.push(state.redirectTo)
+      }
     },
   )
 
@@ -67,6 +72,11 @@ export function ProjectForm() {
             {errors.description[0]}
           </p>
         )}
+      </div>
+
+      <div className="space-y-1">
+        <Label htmlFor="avatar">Project image</Label>
+        <Input name="avatar" type="file" id="avatar" accept="image/*" />
       </div>
 
       <Button className="w-full" type="submit" disabled={isPending}>

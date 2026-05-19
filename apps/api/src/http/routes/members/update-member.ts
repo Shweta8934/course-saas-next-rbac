@@ -5,6 +5,7 @@ import { z } from 'zod'
 
 import { auth } from '@/http/middlewares/auth'
 import { UnauthorizedError } from '@/http/routes/_errors/unauthorized-error'
+import { createAuditLog } from '@/lib/audit-log'
 import { prisma } from '@/lib/prisma'
 import { getUserPermissions } from '@/utils/get-user-permissions'
 
@@ -33,7 +34,8 @@ export async function updateMember(app: FastifyInstance) {
       },
       async (request, reply) => {
         const { slug, memberId } = request.params
-        const userId = await request.getCurrentUserId()
+        const authContext = await request.getAuthContext()
+        const userId = authContext.effectiveUserId
         const { organization, membership } =
           await request.getUserMembership(slug)
 
@@ -55,6 +57,16 @@ export async function updateMember(app: FastifyInstance) {
           data: {
             role,
           },
+        })
+
+        await createAuditLog({
+          eventType: 'USER_ROLE_CHANGED',
+          actorUserId: authContext.actorUserId,
+          effectiveUserId: authContext.effectiveUserId,
+          organizationId: organization.id,
+          entityType: 'member',
+          entityId: memberId,
+          metadata: { role },
         })
 
         return reply.status(204).send()

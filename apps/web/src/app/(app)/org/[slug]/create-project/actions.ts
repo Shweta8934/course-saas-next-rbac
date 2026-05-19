@@ -5,6 +5,7 @@ import { z } from 'zod'
 
 import { getCurrentOrg } from '@/auth/auth'
 import { createProject } from '@/http/create-project'
+import { saveUpload } from '@/lib/save-upload'
 
 const projectSchema = z.object({
   name: z
@@ -23,12 +24,15 @@ export async function createProjectAction(data: FormData) {
   }
 
   const { name, description } = result.data
+  const avatarFile = data.get('avatar') as File | null
 
   try {
+    const avatarUrl = await saveUpload(avatarFile)
     await createProject({
       org: getCurrentOrg()!,
       name,
       description,
+      avatarUrl: avatarUrl ?? undefined,
     })
   } catch (err) {
     if (err instanceof HTTPError) {
@@ -50,5 +54,6 @@ export async function createProjectAction(data: FormData) {
     success: true,
     message: 'Successfully saved the project.',
     errors: null,
+    redirectTo: '/',
   }
 }

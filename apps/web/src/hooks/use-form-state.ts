@@ -5,12 +5,13 @@ interface FormState {
   success: boolean
   message: string | null
   errors: Record<string, string[]> | null
+  [key: string]: unknown
 }
 
-export function useFormState(
-  action: (data: FormData) => Promise<FormState>,
-  onSuccess?: () => Promise<void> | void,
-  initialState?: FormState,
+export function useFormState<TState extends FormState>(
+  action: (data: FormData) => Promise<TState>,
+  onSuccess?: (state: TState) => Promise<void> | void,
+  initialState?: TState,
 ) {
   const [isPending, startTransition] = useTransition()
 
@@ -29,7 +30,7 @@ export function useFormState(
 
       if (state.success) {
         if (onSuccess) {
-          await onSuccess()
+          await onSuccess(state)
         }
         requestFormReset(form)
       }

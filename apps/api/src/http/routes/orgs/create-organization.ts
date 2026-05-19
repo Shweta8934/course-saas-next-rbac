@@ -4,6 +4,7 @@ import { z } from 'zod'
 
 import { auth } from '@/http/middlewares/auth'
 import { BadRequestError } from '@/http/routes/_errors/bad-request-error'
+import { createAuditLog } from '@/lib/audit-log'
 import { prisma } from '@/lib/prisma'
 import { createSlug } from '@/utils/create-slug'
 
@@ -22,6 +23,7 @@ export async function createOrganization(app: FastifyInstance) {
             name: z.string(),
             domain: z.string().nullish(),
             shouldAttachUsersByDomain: z.boolean().optional(),
+            avatarUrl: z.string().optional(),
           }),
           response: {
             201: z.object({
@@ -31,9 +33,10 @@ export async function createOrganization(app: FastifyInstance) {
         },
       },
       async (request, reply) => {
-        const userId = await request.getCurrentUserId()
+        const authContext = await request.getAuthContext()
+        const userId = authContext.effectiveUserId
 
-        const { name, domain, shouldAttachUsersByDomain } = request.body
+        const { name, domain, shouldAttachUsersByDomain, avatarUrl } = request.body
 
         if (domain) {
           const organizationByDomain = await prisma.organization.findUnique({
@@ -55,6 +58,7 @@ export async function createOrganization(app: FastifyInstance) {
             slug: createSlug(name),
             domain,
             shouldAttachUsersByDomain,
+            avatarUrl,
             ownerId: userId,
             members: {
               create: {
@@ -63,6 +67,16 @@ export async function createOrganization(app: FastifyInstance) {
               },
             },
           },
+        })
+
+        await createAuditLog({
+          eventType: 'COMPANY_CREATED',
+          actorUserId: authContext.actorUserId,
+          effectiveUserId: authContext.effectiveUserId,
+          organizationId: organization.id,
+          entityType: 'organization',
+          entityId: organization.id,
+          metadata: { name, slug: organization.slug },
         })
 
         return reply.status(201).send({

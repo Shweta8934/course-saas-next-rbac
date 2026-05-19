@@ -8,8 +8,8 @@ import {
 } from '@/components/ui/card'
 import { getOrganization } from '@/http/get-organization'
 
-import { OrganizationForm } from '../../organization-form'
 import { Billing } from './billing'
+import { OrganizationEditLink } from './organization-edit-link'
 import { ShutdownOrganizationButton } from './shutdown-organization-button'
 
 export default async function Settings() {
@@ -29,22 +29,30 @@ export default async function Settings() {
       <div className="space-y-4">
         {canUpdateOrganization && (
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Organization settings</CardTitle>
+              <OrganizationEditLink orgSlug={currentOrg!} />
               <CardDescription>
                 Update your organization details
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <OrganizationForm
-                isUpdating
-                initialData={{
-                  name: organization.name,
-                  domain: organization.domain,
-                  shouldAttachUsersByDomain:
-                    organization.shouldAttachUsersByDomain,
-                }}
-              />
+            <CardContent className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Organization name</p>
+                <p className="text-sm font-medium">{organization.name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">E-mail domain</p>
+                <p className="text-sm font-medium">
+                  {organization.domain ?? 'Not set'}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Auto-join members</p>
+                <p className="text-sm font-medium">
+                  {organization.shouldAttachUsersByDomain ? 'Enabled' : 'Disabled'}
+                </p>
+              </div>
             </CardContent>
           </Card>
         )}

@@ -5,6 +5,7 @@ import { z } from 'zod'
 
 import { auth } from '@/http/middlewares/auth'
 import { UnauthorizedError } from '@/http/routes/_errors/unauthorized-error'
+import { createAuditLog } from '@/lib/audit-log'
 import { prisma } from '@/lib/prisma'
 import { getUserPermissions } from '@/utils/get-user-permissions'
 
@@ -29,7 +30,8 @@ export async function shutdownOrganization(app: FastifyInstance) {
       },
       async (request, reply) => {
         const { slug } = request.params
-        const userId = await request.getCurrentUserId()
+        const authContext = await request.getAuthContext()
+        const userId = authContext.effectiveUserId
         const { membership, organization } =
           await request.getUserMembership(slug)
 
@@ -42,6 +44,16 @@ export async function shutdownOrganization(app: FastifyInstance) {
             `You're not allowed to shutdown this organization.`,
           )
         }
+
+        await createAuditLog({
+          eventType: 'COMPANY_SUSPENDED',
+          actorUserId: authContext.actorUserId,
+          effectiveUserId: authContext.effectiveUserId,
+          organizationId: organization.id,
+          entityType: 'organization',
+          entityId: organization.id,
+          metadata: { slug: organization.slug },
+        })
 
         await prisma.organization.delete({
           where: {

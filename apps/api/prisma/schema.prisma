@@ -89,6 +89,7 @@ model Member {
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String @map("user_id")
+  projectAssignments ProjectMember[]
 
   @@unique([organizationId, userId])
   @@map("members")
@@ -114,6 +115,22 @@ model Organization {
   @@map("organizations")
 }
 
+model AuditLog {
+  id              String   @id @default(uuid())
+  eventType       String   @map("event_type")
+  actorUserId     String?  @map("actor_user_id")
+  effectiveUserId String?  @map("effective_user_id")
+  organizationId  String?  @map("organization_id")
+  entityType      String?  @map("entity_type")
+  entityId        String?  @map("entity_id")
+  metadata        Json?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([eventType, createdAt])
+  @@index([organizationId, createdAt])
+  @@map("audit_logs")
+}
+
 model Project {
   id          String   @id @default(uuid())
   name        String
@@ -128,6 +145,23 @@ model Project {
 
   owner   User   @relation(fields: [ownerId], references: [id])
   ownerId String @map("owner_id")
+  memberAssignments ProjectMember[]
 
   @@map("projects")
+}
+
+model ProjectMember {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String  @map("project_id")
+
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  memberId String @map("member_id")
+
+  @@unique([projectId, memberId])
+  @@index([projectId])
+  @@index([memberId])
+  @@map("project_members")
 }

@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { auth } from '@/http/middlewares/auth'
 import { BadRequestError } from '@/http/routes/_errors/bad-request-error'
 import { UnauthorizedError } from '@/http/routes/_errors/unauthorized-error'
+import { createAuditLog } from '@/lib/audit-log'
 import { prisma } from '@/lib/prisma'
 import { getUserPermissions } from '@/utils/get-user-permissions'
 
@@ -24,6 +25,7 @@ export async function updateOrganization(app: FastifyInstance) {
             name: z.string(),
             domain: z.string().nullish(),
             shouldAttachUsersByDomain: z.boolean().optional(),
+            avatarUrl: z.string().optional(),
           }),
           params: z.object({
             slug: z.string(),
@@ -35,11 +37,12 @@ export async function updateOrganization(app: FastifyInstance) {
       },
       async (request, reply) => {
         const { slug } = request.params
-        const userId = await request.getCurrentUserId()
+        const authContext = await request.getAuthContext()
+        const userId = authContext.effectiveUserId
         const { membership, organization } =
           await request.getUserMembership(slug)
 
-        const { name, domain, shouldAttachUsersByDomain } = request.body
+        const { name, domain, shouldAttachUsersByDomain, avatarUrl } = request.body
 
         const authOrganization = organizationSchema.parse(organization)
 
@@ -76,7 +79,18 @@ export async function updateOrganization(app: FastifyInstance) {
             name,
             domain,
             shouldAttachUsersByDomain,
+            avatarUrl,
           },
+        })
+
+        await createAuditLog({
+          eventType: 'TENANT_BRANDING_UPDATED',
+          actorUserId: authContext.actorUserId,
+          effectiveUserId: authContext.effectiveUserId,
+          organizationId: organization.id,
+          entityType: 'organization',
+          entityId: organization.id,
+          metadata: { name, domain, shouldAttachUsersByDomain },
         })
 
         return reply.status(204).send()

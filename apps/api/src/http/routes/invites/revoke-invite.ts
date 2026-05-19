@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { auth } from '@/http/middlewares/auth'
 import { BadRequestError } from '@/http/routes/_errors/bad-request-error'
 import { UnauthorizedError } from '@/http/routes/_errors/unauthorized-error'
+import { createAuditLog } from '@/lib/audit-log'
 import { prisma } from '@/lib/prisma'
 import { getUserPermissions } from '@/utils/get-user-permissions'
 
@@ -30,7 +31,8 @@ export async function revokeInvite(app: FastifyInstance) {
       },
       async (request, reply) => {
         const { slug, inviteId } = request.params
-        const userId = await request.getCurrentUserId()
+        const authContext = await request.getAuthContext()
+        const userId = authContext.effectiveUserId
         const { organization, membership } =
           await request.getUserMembership(slug)
 
@@ -55,6 +57,16 @@ export async function revokeInvite(app: FastifyInstance) {
           where: {
             id: inviteId,
           },
+        })
+
+        await createAuditLog({
+          eventType: 'INVITE_REVOKED',
+          actorUserId: authContext.actorUserId,
+          effectiveUserId: authContext.effectiveUserId,
+          organizationId: organization.id,
+          entityType: 'invite',
+          entityId: inviteId,
+          metadata: { email: invite.email },
         })
 
         reply.code(204).send()

@@ -1,6 +1,7 @@
 'use client'
 
 import { AlertTriangle, Loader2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -24,12 +25,17 @@ export function OrganizationForm({
   isUpdating = false,
   initialData,
 }: OrganizationFormProps) {
+  const router = useRouter()
   const formAction = isUpdating
     ? updateOrganizationAction
     : createOrganizationAction
 
   const [{ errors, message, success }, handleSubmit, isPending] =
-    useFormState(formAction)
+    useFormState(formAction, (state) => {
+      if (state.redirectTo && typeof state.redirectTo === 'string') {
+        router.push(state.redirectTo)
+      }
+    })
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -74,12 +80,21 @@ export function OrganizationForm({
           placeholder="example.com"
           defaultValue={initialData?.domain ?? undefined}
         />
+        <p className="text-xs text-muted-foreground">
+          Enter only domain, for example: `gmail.com` or `company.in` (not full
+          e-mail).
+        </p>
 
         {errors?.domain && (
           <p className="text-xs font-medium text-red-500 dark:text-red-400">
             {errors.domain[0]}
           </p>
         )}
+      </div>
+
+      <div className="space-y-1">
+        <Label htmlFor="avatar">Organization logo</Label>
+        <Input name="avatar" type="file" id="avatar" accept="image/*" />
       </div>
 
       <div className="space-y-1">

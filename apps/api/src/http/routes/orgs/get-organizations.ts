@@ -24,7 +24,7 @@ export async function getOrganizations(app: FastifyInstance) {
                   id: z.string().uuid(),
                   name: z.string(),
                   slug: z.string(),
-                  avatarUrl: z.string().url().nullable(),
+                  avatarUrl: z.string().nullable(),
                   role: roleSchema,
                 }),
               ),
@@ -61,12 +61,21 @@ export async function getOrganizations(app: FastifyInstance) {
 
         const organizationsWithUserRole = organizations.map(
           ({ members, ...org }) => {
+            const membership = members[0]
+
+            if (!membership) {
+              return null
+            }
+
             return {
               ...org,
-              role: members[0].role,
+              role: membership.role,
             }
           },
         )
+        .filter((organization): organization is NonNullable<typeof organization> => {
+          return organization !== null
+        })
 
         return { organizations: organizationsWithUserRole }
       },
